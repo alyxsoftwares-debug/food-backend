@@ -13,7 +13,7 @@ if (process.env.REDIS_URL) {
   redisClient = createClient({
     url: process.env.REDIS_URL,
     socket: process.env.REDIS_URL.startsWith('rediss://') 
-      ? { rejectUnauthorized: false } 
+      ? { tls: true, rejectUnauthorized: false } 
       : undefined
   });
 
