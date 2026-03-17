@@ -104,14 +104,13 @@ const corsOptions: cors.CorsOptions = {
 
     if (
       ALLOWED_ORIGINS.includes(origin) ||
-      origin.endsWith('.vercel.app') || // Permite domínios de preview/produção do Vercel
+      origin.endsWith('.vercel.app') || // <-- Libera qualquer preview/deploy do Vercel
       process.env.NODE_ENV === 'development'
     ) {
       return callback(null, true);
     }
 
-    // O correto para bloquear via CORS sem quebrar o preflight (OPTIONS)
-    // é retornar false no segundo parâmetro, e não lançar um AppError.
+    // Retornar false bloqueia graciosamente sem quebrar o preflight do navegador
     callback(null, false);
   },
   methods          : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
