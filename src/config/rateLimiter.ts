@@ -10,7 +10,12 @@ import { logger }   from '@/config/logger';
 let redisClient: ReturnType<typeof createClient> | null = null;
 
 if (process.env.REDIS_URL) {
-  redisClient = createClient({ url: process.env.REDIS_URL });
+  redisClient = createClient({
+    url: process.env.REDIS_URL,
+    socket: process.env.REDIS_URL.startsWith('rediss://') 
+      ? { rejectUnauthorized: false } 
+      : undefined
+  });
 
   redisClient.on('error', (err: Error) => {
     logger.warn('[Redis] Erro de conexão. Rate limiting usando memória local:', err.message);
