@@ -22,6 +22,7 @@ server.headersTimeout   = 66_000;
 async function start(): Promise<void> {
   logger.info('Iniciando servidor...');
 
+  logger.info('[Server] Testando conexão com o banco de dados Supabase...');
   const dbHealthy = await checkDatabaseHealth();
   if (!dbHealthy) {
     logger.error('[Server] Banco de dados inacessível. Verifique DATABASE_URL no .env');
