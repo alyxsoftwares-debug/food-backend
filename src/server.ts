@@ -5,6 +5,19 @@
 
 import 'dotenv/config';
 
+// ⚠️ IMPORTANTE: registra handlers de erro ANTES de qualquer import
+// para capturar crashes durante o carregamento de módulos
+process.on('uncaughtException', (err: Error) => {
+  console.error('[FATAL] uncaughtException:', err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason: unknown) => {
+  console.error('[FATAL] unhandledRejection:', reason);
+  process.exit(1);
+});
+
 import http                         from 'http';
 import { app }                      from '@/app';
 import { checkDatabaseHealth,
@@ -14,6 +27,8 @@ import { logger }                   from '@/config/logger';
 const PORT = Number(process.env.PORT ?? 3333);
 const HOST = process.env.HOST ?? '0.0.0.0';
 const GRACEFUL_SHUTDOWN_TIMEOUT_MS = 15_000;
+
+logger.info(`[Server] Iniciando na porta ${PORT}...`);
 
 const server = http.createServer(app);
 server.keepAliveTimeout = 65_000;
@@ -72,16 +87,9 @@ async function shutdown(signal: string): Promise<void> {
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT',  () => shutdown('SIGINT'));
 
-process.on('uncaughtException', (err: Error) => {
-  logger.error('[Server] uncaughtException:', { name: err.name, message: err.message });
-  shutdown('uncaughtException');
+start().catch((err) => {
+  console.error('[FATAL] Erro ao iniciar servidor:', err);
+  process.exit(1);
 });
-
-process.on('unhandledRejection', (reason: unknown) => {
-  logger.error('[Server] unhandledRejection:', { reason });
-  shutdown('unhandledRejection');
-});
-
-start();
 
 export { server };
