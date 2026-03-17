@@ -104,14 +104,15 @@ const corsOptions: cors.CorsOptions = {
 
     if (
       ALLOWED_ORIGINS.includes(origin) ||
+      origin.endsWith('.vercel.app') || // Permite domínios de preview/produção do Vercel
       process.env.NODE_ENV === 'development'
     ) {
       return callback(null, true);
     }
 
-    callback(
-      new AppError(`CORS: Origem não permitida → ${origin}`, 403, 'CORS_BLOCKED'),
-    );
+    // O correto para bloquear via CORS sem quebrar o preflight (OPTIONS)
+    // é retornar false no segundo parâmetro, e não lançar um AppError.
+    callback(null, false);
   },
   methods          : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders   : ['Content-Type', 'Authorization', 'x-request-id', 'x-company-slug'],
