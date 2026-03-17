@@ -18,6 +18,7 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
   manager : 20,
   cashier : 10,
   waiter  : 5,
+  kitchen : 2,
 };
 
 // ---------------------------------------------------------------------------
