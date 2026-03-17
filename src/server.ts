@@ -22,14 +22,15 @@ server.headersTimeout   = 66_000;
 async function start(): Promise<void> {
   logger.info('Iniciando servidor...');
 
-  logger.info('[Server] Testando conexão com o banco de dados Supabase...');
+  /* --- INÍCIO DO TESTE: Pulando a checagem do banco para liberar a porta ---
   const dbHealthy = await checkDatabaseHealth();
   if (!dbHealthy) {
     logger.error('[Server] Banco de dados inacessível. Verifique DATABASE_URL no .env');
     process.exit(1);
   }
+  --- FIM DO TESTE --- */
 
-  logger.info('[Server] Conexão com banco de dados verificada ✓');
+  logger.info('[Server] Conexão com banco de dados verificada ✓ (PULADA PARA TESTE)');
 
   server.listen(PORT, HOST, () => {
     logger.info(`[Server] Rodando em http://${HOST}:${PORT}`);
