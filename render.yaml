@@ -1,0 +1,79 @@
+# =============================================================================
+# render.yaml — Configuração de deploy no Render.com
+# =============================================================================
+# Infrastructure-as-Code para o Render.
+# Commit este arquivo no repositório — o Render detecta automaticamente.
+#
+# Docs: https://render.com/docs/blueprint-spec
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # API Backend — Node.js
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: food-saas-backend
+    runtime: node
+    region: oregon           # Mais próximo do Supabase us-east-1 / sa-east-1
+    plan: starter            # starter (512MB RAM) | standard (2GB RAM)
+
+    # Repositório e branch
+    branch: main
+
+    # Comandos
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+
+    # Health check — Render reinicia automaticamente se retornar não-200
+    healthCheckPath: /health
+
+    # Auto-deploy ao fazer push na branch main
+    autoDeploy: true
+
+    # Escalonamento automático (plano standard+)
+    # scaling:
+    #   minInstances: 1
+    #   maxInstances: 3
+    #   targetMemoryPercent: 80
+    #   targetCPUPercent: 70
+
+    # Variáveis de ambiente
+    # Valores sensíveis devem ser configurados no Dashboard do Render
+    # ou via Render Secret Files — NÃO commitar valores reais aqui.
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: LOG_LEVEL
+        value: info
+
+      - key: SERVICE_NAME
+        value: food-saas-backend
+
+      # Variáveis sensíveis — configure no Dashboard do Render:
+      - key: SUPABASE_URL
+        sync: false          # sync: false = valor manual no dashboard
+
+      - key: SUPABASE_ANON_KEY
+        sync: false
+
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+
+      - key: DATABASE_URL
+        sync: false
+
+      - key: REDIS_URL
+        sync: false
+
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+      - key: FRONTEND_URL
+        sync: false
+
+      - key: WEBHOOK_SECRET
+        sync: false
+
+      - key: STORAGE_BUCKET_PRODUCTS
+        value: products
