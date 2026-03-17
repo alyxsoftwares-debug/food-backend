@@ -19,7 +19,7 @@ import { dashboardRoutes } from '@/routes/dashboard.routes';
 import { printerRoutes }   from '@/routes/printer.routes';
 import { webhookRoutes }   from '@/routes/webhook.routes';
 
-import { authLimiter, publicMenuLimiter } from '@/app';
+import { authLimiter, publicMenuLimiter } from '@/config/rateLimiter';
 
 export const router = Router();
 

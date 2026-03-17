@@ -26,15 +26,19 @@ import helmet                   from 'helmet';
 import cors                     from 'cors';
 import compression              from 'compression';
 import morgan                   from 'morgan';
-import rateLimit                from 'express-rate-limit';
-import RedisStore               from 'rate-limit-redis';
-import { createClient }         from 'redis';
 import hpp                      from 'hpp';
 
 import { checkDatabaseHealth }  from '@/config/supabase';
 import { router }               from '@/routes';
 import { AppError }             from '@/errors/AppError';
 import { logger }               from '@/config/logger';
+import {
+  redisClient,
+  globalLimiter,
+  authLimiter,
+  publicMenuLimiter,
+  orderCreationLimiter,
+} from '@/config/rateLimiter';
 
 // ---------------------------------------------------------------------------
 // App Instance
@@ -171,100 +175,6 @@ app.use(
       res.statusCode === 200 && _req.path === '/health',
   }),
 );
-
-// ---------------------------------------------------------------------------
-// Redis Client (para Rate Limiting distribuído)
-// Compartilha contadores entre múltiplas instâncias do servidor no Render.
-// ---------------------------------------------------------------------------
-
-let redisClient: ReturnType<typeof createClient> | null = null;
-
-if (process.env.REDIS_URL) {
-  redisClient = createClient({ url: process.env.REDIS_URL });
-
-  redisClient.on('error', (err: Error) => {
-    // Loga mas não derruba o servidor — rate limiting cai para memória local
-    logger.warn('[Redis] Erro de conexão. Rate limiting usando memória local:', err.message);
-    redisClient = null;
-  });
-
-  redisClient.connect().catch((err: Error) => {
-    logger.warn('[Redis] Não foi possível conectar:', err.message);
-    redisClient = null;
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Rate Limiting
-// Perfis diferentes para rotas públicas, autenticadas e sensíveis.
-// ---------------------------------------------------------------------------
-
-/**
- * Factory que cria um rate limiter configurável.
- * Se Redis estiver disponível, usa store distribuída.
- */
-function createRateLimiter(options: {
-  windowMs    : number;
-  max         : number;
-  message     : string;
-  keyPrefix   : string;
-}) {
-  return rateLimit({
-    windowMs          : options.windowMs,
-    max               : options.max,
-    standardHeaders   : true,  // Retorna headers `RateLimit-*` (RFC 6585)
-    legacyHeaders     : false,
-    keyGenerator      : (req) => `${options.keyPrefix}:${req.ip}`,
-    store             : redisClient
-      ? new RedisStore({
-          sendCommand: (...args: string[]) =>
-            (redisClient as ReturnType<typeof createClient>).sendCommand(args),
-          prefix: `rl:${options.keyPrefix}`,
-        })
-      : undefined,
-    handler: (_req, res) => {
-      res.status(429).json({
-        success  : false,
-        error    : {
-          code   : 'RATE_LIMIT_EXCEEDED',
-          message: options.message,
-        },
-      });
-    },
-  });
-}
-
-/** Rate limiter global — proteção base para toda a API */
-export const globalLimiter = createRateLimiter({
-  windowMs : 15 * 60 * 1000, // 15 minutos
-  max      : 300,
-  message  : 'Muitas requisições. Aguarde alguns minutos.',
-  keyPrefix: 'global',
-});
-
-/** Rate limiter para rotas de autenticação (login, refresh) */
-export const authLimiter = createRateLimiter({
-  windowMs : 15 * 60 * 1000, // 15 minutos
-  max      : 10,
-  message  : 'Muitas tentativas de login. Aguarde 15 minutos.',
-  keyPrefix: 'auth',
-});
-
-/** Rate limiter permissivo para cardápio público */
-export const publicMenuLimiter = createRateLimiter({
-  windowMs : 60 * 1000, // 1 minuto
-  max      : 120,
-  message  : 'Limite de requisições atingido.',
-  keyPrefix: 'menu',
-});
-
-/** Rate limiter para criação de pedidos (previne spam de pedidos) */
-export const orderCreationLimiter = createRateLimiter({
-  windowMs : 60 * 1000, // 1 minuto
-  max      : 10,
-  message  : 'Muitos pedidos em pouco tempo. Aguarde um momento.',
-  keyPrefix: 'order',
-});
 
 app.use('/api/', globalLimiter);
 

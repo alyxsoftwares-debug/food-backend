@@ -18,7 +18,7 @@ import { authenticate }            from '@/middlewares/authenticate';
 import { authenticateQR }          from '@/middlewares/authenticate';
 import { authorize }               from '@/middlewares/authorize';
 import { validate }                from '@/middlewares/validate';
-import { orderCreationLimiter }    from '@/app';
+import { orderCreationLimiter }    from '@/config/rateLimiter';
 import {
   createOrderSchema,
   createOrderFromTableSchema,
