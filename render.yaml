@@ -22,7 +22,7 @@ services:
 
     # Comandos
     buildCommand: npm ci && npm run build
-    startCommand: npm run start:prod
+    startCommand: NODE_ENV=production node entrypoint.js
 
     # Health check — Render reinicia automaticamente se retornar não-200
     healthCheckPath: /health
