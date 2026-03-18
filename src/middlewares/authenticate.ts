@@ -61,9 +61,15 @@ setInterval(() => {
 
 function extractBearerToken(req: Request): string | null {
   const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return null;
-  const token = header.slice(7).trim();
-  return token.length > 0 ? token : null;
+  if (header?.startsWith('Bearer ')) {
+    const token = header.slice(7).trim();
+    if (token.length > 0) return token;
+  }
+  // Fallback para ler da query string (usado pelo SSE EventSource)
+  const queryToken = req.query.token as string;
+  if (queryToken && queryToken.length > 0) return queryToken;
+  
+  return null;
 }
 
 // ---------------------------------------------------------------------------
