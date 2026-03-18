@@ -199,7 +199,7 @@ export class ProductService {
   // ---------------------------------------------------------------------------
 
   async create(dto: CreateProductDTO) {
-    return withTransaction(async (client) => {
+    const productId = await withTransaction(async (client) => {
       // Valida categoria (se informada)
       if (dto.categoryId) {
         const { rows } = await client.query(
@@ -283,10 +283,14 @@ export class ProductService {
         }
       }
 
-      invalidateMenuCache(dto.companyId);
-
-      return this.findById({ id: product.id, companyId: dto.companyId });
+      // Retorna o ID de dentro da transação em vez de tentar buscar o produto
+      return product.id; 
     });
+
+    invalidateMenuCache(dto.companyId);
+    
+    // Agora, busca o produto no banco com segurança fora da transação
+    return this.findById({ id: productId, companyId: dto.companyId });
   }
 
   // ---------------------------------------------------------------------------
