@@ -88,8 +88,11 @@ export const supabaseClient: SupabaseClient = getSupabaseClient();
 // Pool nativo PostgreSQL
 // ---------------------------------------------------------------------------
 
+// Remove os parâmetros da URL (como ?sslmode=require) para que não sobrescrevam a regra de SSL abaixo
+const cleanDbUrl = DATABASE_URL.split('?')[0];
+
 export const pgPool = new Pool({
-  connectionString       : DATABASE_URL,
+  connectionString       : cleanDbUrl,
   max                    : 20,
   min                    : 2,
   idleTimeoutMillis      : 30_000,
